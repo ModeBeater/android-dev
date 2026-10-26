@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon: rounded indigo square with an upward "release" arrow and a base line -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF4F46E5"
+        android:pathData="M18,0 H90 A18,18 0 0 1 108,18 V90 A18,18 0 0 1 90,108 H18 A18,18 0 0 1 0,90 V18 A18,18 0 0 1 18,0 Z" />
+    <path
+        android:fillColor="#FFFAFAFF"
+        android:pathData="M54,22 L78,50 H64 V74 H44 V50 H30 Z" />
+    <path
+        android:fillColor="#FFB4B0FF"
+        android:pathData="M30,82 H78 V90 H30 Z" />
+</vector>
