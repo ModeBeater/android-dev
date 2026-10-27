@@ -2,18 +2,14 @@ package kz.kbtu.releaseflow.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +21,11 @@ import androidx.compose.ui.unit.dp
 import kz.kbtu.releaseflow.ui.ReleaseUiState
 import kz.kbtu.releaseflow.ui.components.AddAppDialog
 import kz.kbtu.releaseflow.ui.components.AppCard
+import kz.kbtu.releaseflow.ui.components.AppFab
 import kz.kbtu.releaseflow.ui.components.EmptyState
+import kz.kbtu.releaseflow.ui.components.PageListPadding
+import kz.kbtu.releaseflow.ui.components.PrimaryButton
+import kz.kbtu.releaseflow.ui.components.SectionHeader
 
 /**
  * Apps tab: every app with its latest release, plus a FAB that opens the "new app" dialog.
@@ -47,26 +47,29 @@ fun AppsScreen(
                 icon = Icons.AutoMirrored.Filled.List,
                 title = "No apps yet",
                 subtitle = "Add the apps your team ships to start tracking releases.",
-                action = { Button(onClick = { showAddDialog = true }) { Text("Add app") } },
+                action = { PrimaryButton(text = "Add app", onClick = { showAddDialog = true }) },
             )
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+                contentPadding = PageListPadding,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                item { SectionHeader(title = "Tracked apps", count = state.apps.size) }
                 items(state.apps, key = { it.id }) { app ->
                     AppCard(app = app, onClick = { onOpenApp(app.id) })
                 }
             }
         }
 
-        ExtendedFloatingActionButton(
+        // Sits above the floating tab bar.
+        AppFab(
+            text = "New app",
+            icon = Icons.Default.Add,
             onClick = { showAddDialog = true },
-            icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-            text = { Text("New app") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
+                .navigationBarsPadding()
+                .padding(end = 20.dp, bottom = 92.dp),
         )
     }
 

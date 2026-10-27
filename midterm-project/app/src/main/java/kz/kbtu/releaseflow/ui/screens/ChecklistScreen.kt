@@ -3,6 +3,7 @@ package kz.kbtu.releaseflow.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,16 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kz.kbtu.releaseflow.domain.model.Platform
@@ -28,9 +27,14 @@ import kz.kbtu.releaseflow.ui.ReleaseUiState
 import kz.kbtu.releaseflow.ui.components.ChecklistProgress
 import kz.kbtu.releaseflow.ui.components.ChecklistRow
 import kz.kbtu.releaseflow.ui.components.EmptyState
+import kz.kbtu.releaseflow.ui.components.FlatCard
+import kz.kbtu.releaseflow.ui.components.Hairline
+import kz.kbtu.releaseflow.ui.components.PageListPadding
 import kz.kbtu.releaseflow.ui.components.PlatformPicker
-import kz.kbtu.releaseflow.ui.components.SectionTitle
+import kz.kbtu.releaseflow.ui.components.SecondaryButton
+import kz.kbtu.releaseflow.ui.components.SectionHeader
 import kz.kbtu.releaseflow.ui.components.TextInputDialog
+import kz.kbtu.releaseflow.ui.theme.ReleaseFlowTheme
 
 /**
  * Submission checklist of one release, grouped: common items, iOS, Android.
@@ -44,6 +48,7 @@ fun ChecklistScreen(
     onAdd: (title: String, platform: Platform?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = ReleaseFlowTheme.colors
     val release = state.release(releaseId)
     if (release == null) {
         EmptyState(icon = Icons.Default.Warning, title = "Release not found", subtitle = "Release #$releaseId does not exist.", modifier = modifier)
@@ -61,22 +66,18 @@ fun ChecklistScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PageListPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "${release.appName} ${release.version}", style = MaterialTheme.typography.titleLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ChecklistProgress(done = release.checklistDone, total = release.checklistTotal)
-                    Text(
-                        text = "Items marked \"Reviewer checks\" are what the store rejects a build for. Complete them before submitting.",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                }
+            FlatCard {
+                ChecklistProgress(done = release.checklistDone, total = release.checklistTotal, label = "Completed")
+                Text(
+                    text = "Items marked “Reviewer checks” are what the store rejects a build for. Complete them before submitting.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textTertiary,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
             }
         }
 
@@ -84,11 +85,11 @@ fun ChecklistScreen(
             val items = release.checklist.filter { it.platform == platform }
             if (items.isNotEmpty()) {
                 item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                            SectionTitle(title)
+                    Column {
+                        SectionHeader(title = title, count = items.count { it.done }.let { done -> if (done == items.size) null else items.size - done })
+                        FlatCard(padding = PaddingValues(vertical = 4.dp)) {
                             items.forEachIndexed { index, checklistItem ->
-                                if (index > 0) HorizontalDivider()
+                                if (index > 0) Hairline(startIndent = 52)
                                 ChecklistRow(item = checklistItem, onToggle = { onToggle(checklistItem.id) })
                             }
                         }
@@ -99,14 +100,22 @@ fun ChecklistScreen(
 
         item {
             Column {
-                SectionTitle("Add an item")
-                PlatformPicker(
-                    selected = Platform.entries.firstOrNull { it.name == newItemPlatform },
-                    onSelect = { newItemPlatform = it?.name ?: "" },
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedButton(onClick = { showAddDialog = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Add checklist item")
+                SectionHeader(title = "Add an item")
+                FlatCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Applies to",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.textSecondary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        PlatformPicker(
+                            selected = Platform.entries.firstOrNull { it.name == newItemPlatform },
+                            onSelect = { newItemPlatform = it?.name ?: "" },
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SecondaryButton(text = "Add checklist item", onClick = { showAddDialog = true }, modifier = Modifier.fillMaxWidth())
                 }
             }
         }

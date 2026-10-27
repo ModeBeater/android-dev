@@ -32,7 +32,7 @@ object Routes {
 
 /** Destinations shown in the bottom navigation bar. */
 enum class TopLevelDestination(val route: String, val title: String, val icon: ImageVector) {
-    Dashboard(Routes.DASHBOARD, "Dashboard", Icons.Default.Home),
+    Dashboard(Routes.DASHBOARD, "Overview", Icons.Default.Home),
     Apps(Routes.APPS, "Apps", Icons.AutoMirrored.Filled.List),
     Stats(Routes.STATS, "Stats", Icons.Default.Info),
 }

@@ -96,18 +96,36 @@ move the Android rollout from 20 % to 100 %.
   Screens are stateless functions of `ReleaseUiState` + callbacks; everything under `ui/components`
   is reusable and has no idea where its data comes from.
 
+## Design system
+
+The look follows the house style of the author's production apps (Prosper Diagnostics / Prosper
+Business), ported to Compose in `ui/theme`:
+
+- **Palette** (`Color.kt`): a black canvas, flat `#1A1A1A` surfaces with **no outlines** (a card is a
+  lighter block, never a bordered box), one purple accent and four status hues (green / yellow / red /
+  blue). Dark is the designed theme; light is the same palette on a white canvas and follows the system
+  setting. Screens read semantic colours through `ReleaseFlowTheme.colors`, not Material roles.
+- **Type** (`Type.kt`): bundled **Inter** (variable font, real weights 400–700) for UI text and
+  **Roboto Mono** for versions, build numbers and bundle ids — content that has to line up.
+- **Shapes** (`Theme.kt`): a surface is rounded at 20, a button / dialog at 24, pills are round.
+- **Chrome** (`components/Chrome.kt`): transparent centred top bar with a quiet "where you came from"
+  subtitle on detail screens; a floating pill tab bar the lists scroll underneath.
+- **Building blocks** (`components/`): `FlatCard`, `GroupedCard` + `KeyValueRow` (rows with hairlines),
+  `KpiTile`, `SectionHeader`, `AppPill` / `StageBadge` / `PlatformChip`, `TrackTimeline`, `SegmentedPills`,
+  `AppTextField`, `PrimaryButton` / `SecondaryButton` / `DangerButton` / `LinkButton`, `EmptyState`.
+
 ## Where the requirements are demonstrated
 
 | Requirement | Where |
 | --- | --- |
 | ≥ 3 functional screens with Navigation Compose | 7 destinations in `ReleaseFlowApp.kt` / `ui/navigation/Routes.kt`; typed arguments via `navArgument(... NavType.IntType)`; bottom bar uses `popUpTo(startDestination) { saveState } + launchSingleTop + restoreState`; the "new release" form is popped with `popUpTo(NEW_RELEASE) { inclusive = true }` |
 | ≥ 3 meaningful features | per-platform release workflow, checklist-driven store review, dashboard with attention list, statistics, app/release management |
-| Material 3, reusable composables, consistent styling | `ui/theme` (custom color scheme, typography); `StageBadge`, `PlatformChip`, `AppMonogram`, `TrackTimeline`, `ReleaseCard`, `AppCard`, `ChecklistRow`, `ChecklistProgress`, `ActivityRow`, `StatCard`, `BarRow`, `SummaryRow`, `SectionTitle`, `ChoiceChipRow<T>`, `EmptyState`, `TextInputDialog`, `AddAppDialog`, `RolloutDialog` |
-| User input, event handling, interactive state | forms with validation (version regex, date, platforms), checkboxes, chips, slider, dialogs, FABs, workflow buttons — every event is a ViewModel method |
+| Material 3, reusable composables, consistent styling | `ui/theme` (semantic palette → `ColorScheme`, Inter / Roboto Mono typography, shapes); `FlatCard`, `GroupedCard<T>`, `KeyValueRow`, `KpiTile`, `SectionHeader`, `AppPill`, `StageBadge`, `PlatformChip`, `AppMonogram`, `TrackTimeline`, `ReleaseCard`, `AppCard`, `ChecklistRow`, `ChecklistProgress`, `ActivityRow`, `AttentionRow`, `BarRow`, `SegmentedPills<T>`, `AppTextField`, `AppCheckbox`, `PrimaryButton` / `SecondaryButton` / `DangerButton` / `LinkButton` / `AppFab`, `AppTopBar`, `FloatingTabBar`, `EmptyState`, `TextInputDialog`, `AddAppDialog`, `RolloutDialog` |
+| User input, event handling, interactive state | forms with validation (version regex, date, platforms), checkboxes, segmented pills, slider, dialogs, FABs, workflow buttons — every event is a ViewModel method |
 | `remember`, `rememberSaveable`, state hoisting | `remember { SnackbarHostState() }`, `rememberNavController()`; `rememberSaveable` for every draft form field, open dialogs, dialog text and the rollout slider; all components receive value + callback |
 | ViewModel with StateFlow and lifecycle-aware collection | `ReleaseViewModel.uiState: StateFlow<ReleaseUiState>`, collected once with `collectAsStateWithLifecycle()` |
 | Separation of UI, logic and state | UI (`screens`, `components`) → ViewModel (events, UI state) → Repository (commands, snapshots) → Domain (rules, `StoreGateway`); no layer reaches past its neighbour |
-| Kotlin classes, collections, functions, coroutines | `sealed class ReleaseStage` + exhaustive `when` everywhere, `enum class` with properties, `data class`, `interface StoreGateway`, extension functions (`Long.durationText()`), higher-order `ChoiceChipRow<T>`; `groupingBy().eachCount()`, `associateBy`, `flatMap`, `sortedByDescending`, `average`; `suspend` functions + `viewModelScope.launch` + `StateFlow` |
+| Kotlin classes, collections, functions, coroutines | `sealed class ReleaseStage` + exhaustive `when` everywhere, `enum class` with properties, `data class`, `interface StoreGateway`, extension functions (`Long.durationText()`), higher-order `SegmentedPills<T>` / `GroupedCard<T>`; `groupingBy().eachCount()`, `associateBy`, `flatMap`, `sortedByDescending`, `average`; `suspend` functions + `viewModelScope.launch` + `StateFlow` |
 | Correct behaviour during configuration changes | ViewModel keeps data and in-flight operations; `rememberNavController()` restores the back stack; `rememberSaveable` restores forms, dialogs and the slider; a running CI/store check keeps running and its spinner reappears after rotation |
 
 ## Part 2 roadmap

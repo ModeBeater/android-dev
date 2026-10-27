@@ -2,21 +2,12 @@ package kz.kbtu.releaseflow.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kz.kbtu.releaseflow.domain.model.Platform
@@ -26,9 +17,14 @@ import kz.kbtu.releaseflow.domain.util.monthLabel
 import kz.kbtu.releaseflow.domain.util.percentText
 import kz.kbtu.releaseflow.ui.ReleaseUiState
 import kz.kbtu.releaseflow.ui.components.BarRow
+import kz.kbtu.releaseflow.ui.components.FlatCard
+import kz.kbtu.releaseflow.ui.components.GroupedCard
+import kz.kbtu.releaseflow.ui.components.KeyValueRow
+import kz.kbtu.releaseflow.ui.components.KpiTile
+import kz.kbtu.releaseflow.ui.components.PageListPadding
 import kz.kbtu.releaseflow.ui.components.PlatformChip
-import kz.kbtu.releaseflow.ui.components.SectionTitle
-import kz.kbtu.releaseflow.ui.components.StatCard
+import kz.kbtu.releaseflow.ui.components.SectionHeader
+import kz.kbtu.releaseflow.ui.theme.ReleaseFlowTheme
 
 /** Statistics computed from the stage histories: review times, approval rate, rejections, cadence. */
 @Composable
@@ -36,57 +32,52 @@ fun StatsScreen(
     state: ReleaseUiState,
     modifier: Modifier = Modifier,
 ) {
+    val colors = ReleaseFlowTheme.colors
     val stats = state.stats ?: return
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PageListPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Platform.entries.forEach { platform ->
-                    StatCard(
-                        title = "${platform.store} review",
+                    KpiTile(
+                        label = "${platform.store} review",
                         value = stats.averageReviewMs[platform]?.durationText() ?: "—",
-                        hint = "average per cycle",
+                        caption = "average per cycle",
                         modifier = Modifier.weight(1f),
-                        containerColor = if (platform == Platform.IOS) MaterialTheme.colorScheme.surfaceVariant
-                        else MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = if (platform == Platform.IOS) MaterialTheme.colorScheme.onSurfaceVariant
-                        else MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                 }
             }
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(
-                    title = "Approval rate",
+                KpiTile(
+                    label = "Approval rate",
                     value = stats.approvalRate?.percentText() ?: "—",
-                    hint = "${stats.reviewCycles} review cycles",
+                    caption = "${stats.reviewCycles} review cycles",
                     modifier = Modifier.weight(1f),
                 )
-                StatCard(
-                    title = "Longest review",
+                KpiTile(
+                    label = "Longest review",
                     value = stats.longestReviewMs?.durationText() ?: "—",
-                    hint = "${stats.liveReleases} releases live",
+                    caption = "${stats.liveReleases} releases live",
                     modifier = Modifier.weight(1f),
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
             }
         }
 
         item {
             Column {
-                SectionTitle("Releases per month")
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        val max = stats.releasesPerMonth.maxOfOrNull { it.second } ?: 1
-                        if (stats.releasesPerMonth.isEmpty()) {
-                            Text(text = "No releases yet", style = MaterialTheme.typography.bodyMedium)
-                        }
+                SectionHeader(title = "Releases per month")
+                FlatCard {
+                    val max = stats.releasesPerMonth.maxOfOrNull { it.second } ?: 1
+                    if (stats.releasesPerMonth.isEmpty()) {
+                        Text(text = "No releases yet", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         stats.releasesPerMonth.forEach { (month, count) ->
                             BarRow(label = monthLabel(month), valueText = "$count", fraction = count.toFloat() / max)
                         }
@@ -97,47 +88,21 @@ fun StatsScreen(
 
         item {
             Column {
-                SectionTitle("Rejections")
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        if (stats.rejections.isEmpty()) {
-                            Text(
-                                text = "No rejections — keep it that way.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                            )
-                        }
-                        stats.rejections.forEachIndexed { index, rejection ->
-                            if (index > 0) HorizontalDivider()
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "${rejection.appName} ${rejection.version}",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                    )
-                                    Text(
-                                        text = rejection.reason + (rejection.guideline?.let { " · $it" } ?: ""),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column(horizontalAlignment = Alignment.End) {
-                                    PlatformChip(platform = rejection.platform)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = rejection.at.dayText(),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
+                SectionHeader(title = "Rejections", count = stats.rejections.size.takeIf { it > 0 })
+                if (stats.rejections.isEmpty()) {
+                    FlatCard {
+                        Text(text = "No rejections — keep it that way.", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
+                    }
+                } else {
+                    GroupedCard(items = stats.rejections) { rejection ->
+                        KeyValueRow(
+                            label = "${rejection.appName} ${rejection.version}",
+                            caption = rejection.reason + (rejection.guideline?.let { " · $it" } ?: ""),
+                            value = rejection.at.dayText(),
+                            valueColor = colors.textTertiary,
+                            mono = true,
+                            trailing = { PlatformChip(platform = rejection.platform, dense = true) },
+                        )
                     }
                 }
             }
@@ -145,20 +110,20 @@ fun StatsScreen(
 
         item {
             Column {
-                SectionTitle("Rejection reasons by guideline")
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        val byGuideline = stats.rejections
-                            .groupingBy { it.guideline ?: "No guideline cited" }
-                            .eachCount()
-                            .entries
-                            .sortedByDescending { it.value }
-                        val max = byGuideline.maxOfOrNull { it.value } ?: 1
-                        if (byGuideline.isEmpty()) {
-                            Text(text = "Nothing to show", style = MaterialTheme.typography.bodyMedium)
-                        }
+                SectionHeader(title = "Rejection reasons by guideline")
+                FlatCard {
+                    val byGuideline = stats.rejections
+                        .groupingBy { it.guideline ?: "No guideline cited" }
+                        .eachCount()
+                        .entries
+                        .sortedByDescending { it.value }
+                    val max = byGuideline.maxOfOrNull { it.value } ?: 1
+                    if (byGuideline.isEmpty()) {
+                        Text(text = "Nothing to show", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         byGuideline.forEach { (guideline, count) ->
-                            BarRow(label = guideline, valueText = "$count", fraction = count.toFloat() / max)
+                            BarRow(label = guideline, valueText = "$count", fraction = count.toFloat() / max, color = colors.danger)
                         }
                     }
                 }

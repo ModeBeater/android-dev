@@ -3,23 +3,18 @@ package kz.kbtu.releaseflow.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,11 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kz.kbtu.releaseflow.ui.ReleaseUiState
+import kz.kbtu.releaseflow.ui.components.AppFab
 import kz.kbtu.releaseflow.ui.components.AppMonogram
 import kz.kbtu.releaseflow.ui.components.EmptyState
+import kz.kbtu.releaseflow.ui.components.FlatCard
+import kz.kbtu.releaseflow.ui.components.GroupedCard
+import kz.kbtu.releaseflow.ui.components.KeyValueRow
+import kz.kbtu.releaseflow.ui.components.PageListPadding
 import kz.kbtu.releaseflow.ui.components.ReleaseCard
-import kz.kbtu.releaseflow.ui.components.SectionTitle
-import kz.kbtu.releaseflow.ui.components.SummaryRow
+import kz.kbtu.releaseflow.ui.components.SectionHeader
+import kz.kbtu.releaseflow.ui.theme.ReleaseFlowTheme
 
 /** One app: identifiers and its releases, newest first; FAB starts a new release. */
 @Composable
@@ -42,6 +42,7 @@ fun AppDetailsScreen(
     onNewRelease: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = ReleaseFlowTheme.colors
     val app = state.app(appId)
     if (app == null) {
         EmptyState(
@@ -53,35 +54,53 @@ fun AppDetailsScreen(
         return
     }
 
+    val live = app.releases.count { it.isLiveEverywhere }
+    val inFlight = app.releases.size - live
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+            contentPadding = PageListPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        AppMonogram(monogram = app.monogram, modifier = Modifier.size(64.dp))
+                FlatCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppMonogram(monogram = app.monogram, large = true)
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = app.name, style = MaterialTheme.typography.titleLarge)
-                            SummaryRow(label = "App Store", value = app.bundleId)
-                            SummaryRow(label = "Google Play", value = app.packageName)
-                            SummaryRow(label = "Releases", value = app.releases.size.toString())
+                            Text(text = app.name, style = MaterialTheme.typography.titleLarge, color = colors.textPrimary)
+                            Text(
+                                text = "${app.releases.size} releases · $live live · $inFlight in flight",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.textSecondary,
+                            )
                         }
                     }
                 }
             }
 
-            item { SectionTitle("Releases") }
+            item {
+                GroupedCard(
+                    items = listOf(
+                        Triple("App Store", "bundle id", app.bundleId),
+                        Triple("Google Play", "package name", app.packageName),
+                    ),
+                ) { (store, caption, id) ->
+                    KeyValueRow(label = store, caption = caption, value = id, mono = true, valueColor = colors.textSecondary)
+                }
+            }
+
+            item { SectionHeader(title = "Releases", count = app.releases.size.takeIf { it > 0 }) }
 
             if (app.releases.isEmpty()) {
                 item {
-                    Text(
-                        text = "No releases yet — create the first one.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    FlatCard {
+                        Text(
+                            text = "No releases yet — create the first one.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.textSecondary,
+                        )
+                    }
                 }
             }
             items(app.releases, key = { it.id }) { release ->
@@ -90,13 +109,14 @@ fun AppDetailsScreen(
             item { Spacer(modifier = Modifier.height(8.dp)) }
         }
 
-        ExtendedFloatingActionButton(
+        AppFab(
+            text = "New release",
+            icon = Icons.Default.Add,
             onClick = onNewRelease,
-            icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-            text = { Text("New release") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
+                .navigationBarsPadding()
+                .padding(end = 20.dp, bottom = 20.dp),
         )
     }
 }

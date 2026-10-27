@@ -1,27 +1,80 @@
 package kz.kbtu.releaseflow.ui.theme
 
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-// Cool "dev tool" palette: indigo primary, teal secondary, amber tertiary.
-val Indigo40 = Color(0xFF4F46E5)
-val Indigo80 = Color(0xFFB4B0FF)
-val IndigoContainerLight = Color(0xFFE0DEFF)
-val IndigoContainerDark = Color(0xFF3730A3)
+/**
+ * Semantic colours of the app, the same house palette as Prosper Diagnostics / Prosper Business:
+ * a black canvas, flat lighter surfaces with **no outlines**, one purple accent and four status hues.
+ * Dark is the primary theme; light is the same palette on a white canvas.
+ *
+ * Screens read them through `ReleaseFlowTheme.colors` instead of hard-coding Material roles.
+ */
+@Immutable
+data class ReleaseFlowColors(
+    val isDark: Boolean,
+    /** Page canvas. */
+    val background: Color,
+    /** A card: a lighter block on the canvas, never a bordered box. */
+    val surface: Color,
+    /** A quieter block inside a card (inputs, secondary buttons, track of a progress bar). */
+    val surfaceSunken: Color,
+    /** Hairline separators inside a grouped card — nothing else. */
+    val border: Color,
+    val borderStrong: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textTertiary: Color,
+    val accent: Color,
+    val accentSoft: Color,
+    val onAccent: Color,
+    val success: Color,
+    val warning: Color,
+    val danger: Color,
+    val info: Color,
+) {
+    /** Translucent fill for pills and badges of the given colour. */
+    fun tint(color: Color): Color = color.copy(alpha = if (isDark) 0.18f else 0.10f)
+}
 
-val Teal40 = Color(0xFF0F766E)
-val Teal80 = Color(0xFF7FD9CF)
-val TealContainerLight = Color(0xFFCCF1EC)
-val TealContainerDark = Color(0xFF115E59)
+val DarkPalette = ReleaseFlowColors(
+    isDark = true,
+    background = Color(0xFF000000),
+    surface = Color(0xFF1A1A1A),
+    surfaceSunken = Color(0xFF262628),
+    border = Color(0xFF262628),
+    borderStrong = Color(0xFF2B2B2E),
+    textPrimary = Color(0xFFFFFFFF),
+    textSecondary = Color(0xFF7B7F85),
+    textTertiary = Color(0xFF5C6066),
+    accent = Color(0xFF8C52FF),
+    accentSoft = Color(0x337331F5),
+    onAccent = Color(0xFFFFFFFF),
+    success = Color(0xFF09AA5C),
+    warning = Color(0xFFFAAE17),
+    danger = Color(0xFFD52B3B),
+    info = Color(0xFF5B8CFF),
+)
 
-val Amber40 = Color(0xFFB45309)
-val Amber80 = Color(0xFFFBD38D)
-val AmberContainerLight = Color(0xFFFEE9C6)
-val AmberContainerDark = Color(0xFF92400E)
+val LightPalette = ReleaseFlowColors(
+    isDark = false,
+    background = Color(0xFFF7F7F7),
+    surface = Color(0xFFFFFFFF),
+    surfaceSunken = Color(0xFFF5F5F5),
+    border = Color(0xFFEAEDED),
+    borderStrong = Color(0xFFD8DCDC),
+    textPrimary = Color(0xFF191B1D),
+    textSecondary = Color(0xFF7B7F85),
+    textTertiary = Color(0xFFA0A4AA),
+    accent = Color(0xFF6A3DC3),
+    accentSoft = Color(0x1A7331F5),
+    onAccent = Color(0xFFFFFFFF),
+    success = Color(0xFF09AA5C),
+    // Brand yellow and red are tuned for a black canvas; on white they are darkened so text in them stays readable.
+    warning = Color(0xFFB57A00),
+    danger = Color(0xFFFF3347),
+    info = Color(0xFF3D6FC3),
+)
 
-val Snow = Color(0xFFFAFAFF)
-val Ink = Color(0xFF14131F)
-
-/** Semantic colors for stage badges (same in both themes, chosen to read on containers). */
-val LiveGreen = Color(0xFF15803D)
-val LiveGreenContainer = Color(0xFFDCFCE7)
-val LiveGreenContainerDark = Color(0xFF14532D)
+val LocalReleaseFlowColors = staticCompositionLocalOf { DarkPalette }

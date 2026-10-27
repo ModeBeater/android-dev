@@ -1,8 +1,6 @@
 package kz.kbtu.releaseflow.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,11 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,9 +26,15 @@ import androidx.compose.ui.unit.dp
 import kz.kbtu.releaseflow.domain.model.Platform
 import kz.kbtu.releaseflow.domain.util.toEpochMillis
 import kz.kbtu.releaseflow.ui.ReleaseUiState
+import kz.kbtu.releaseflow.ui.components.AppCheckbox
+import kz.kbtu.releaseflow.ui.components.AppTextField
 import kz.kbtu.releaseflow.ui.components.EmptyState
+import kz.kbtu.releaseflow.ui.components.FlatCard
+import kz.kbtu.releaseflow.ui.components.PageListPadding
 import kz.kbtu.releaseflow.ui.components.PlatformChip
-import kz.kbtu.releaseflow.ui.components.SectionTitle
+import kz.kbtu.releaseflow.ui.components.PrimaryButton
+import kz.kbtu.releaseflow.ui.theme.MonoText
+import kz.kbtu.releaseflow.ui.theme.ReleaseFlowTheme
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -51,6 +51,7 @@ fun NewReleaseScreen(
     onCreated: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = ReleaseFlowTheme.colors
     val app = state.app(appId)
     if (app == null) {
         EmptyState(icon = Icons.Default.Warning, title = "App not found", subtitle = "App #$appId does not exist.", modifier = modifier)
@@ -74,82 +75,82 @@ fun NewReleaseScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PageListPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    SectionTitle("${app.name} — new release")
-                    OutlinedTextField(
-                        value = version,
-                        onValueChange = { version = it },
-                        label = { Text("Version") },
-                        singleLine = true,
-                        isError = submitted && versionError != null,
-                        supportingText = { Text(if (submitted && versionError != null) versionError else "Suggested from the latest release") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OutlinedTextField(
-                        value = plannedDate,
-                        onValueChange = { plannedDate = it },
-                        label = { Text("Planned date (optional)") },
-                        placeholder = { Text("YYYY-MM-DD") },
-                        singleLine = true,
-                        isError = submitted && dateError != null,
-                        supportingText = { Text(if (submitted && dateError != null) dateError else "Shown on the dashboard as upcoming") },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OutlinedTextField(
-                        value = notes,
-                        onValueChange = { notes = it },
-                        label = { Text("What is in this release") },
-                        minLines = 2,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+            FlatCard {
+                Text(text = "Release", style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
+                Spacer(modifier = Modifier.height(12.dp))
+                AppTextField(
+                    value = version,
+                    onValueChange = { version = it },
+                    label = "Version",
+                    isError = submitted && versionError != null,
+                    supportingText = if (submitted && versionError != null) versionError else "Suggested from the latest release",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    textStyle = MonoText.large,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                AppTextField(
+                    value = plannedDate,
+                    onValueChange = { plannedDate = it },
+                    label = "Planned date (optional)",
+                    placeholder = "YYYY-MM-DD",
+                    isError = submitted && dateError != null,
+                    supportingText = if (submitted && dateError != null) dateError else "Shown on the overview as upcoming",
+                    textStyle = MonoText.large,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                AppTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = "What is in this release",
+                    singleLine = false,
+                    minLines = 2,
+                )
             }
         }
 
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    SectionTitle("Platforms")
-                    PlatformRow(
-                        platform = Platform.IOS,
-                        enabled = iosEnabled,
-                        build = iosBuild,
-                        onEnabledChange = { iosEnabled = it },
-                        onBuildChange = { iosBuild = it },
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    PlatformRow(
-                        platform = Platform.ANDROID,
-                        enabled = androidEnabled,
-                        build = androidBuild,
-                        onEnabledChange = { androidEnabled = it },
-                        onBuildChange = { androidBuild = it },
-                    )
-                    if (submitted && platformsError != null) {
-                        Text(
-                            text = platformsError,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
+            FlatCard {
+                Text(text = "Platforms", style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
+                Spacer(modifier = Modifier.height(8.dp))
+                PlatformRow(
+                    platform = Platform.IOS,
+                    enabled = iosEnabled,
+                    build = iosBuild,
+                    onEnabledChange = { iosEnabled = it },
+                    onBuildChange = { iosBuild = it },
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                PlatformRow(
+                    platform = Platform.ANDROID,
+                    enabled = androidEnabled,
+                    build = androidBuild,
+                    onEnabledChange = { androidEnabled = it },
+                    onBuildChange = { androidBuild = it },
+                )
+                if (submitted && platformsError != null) {
                     Text(
-                        text = "A submission checklist for the chosen platforms is created automatically.",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = platformsError,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.danger,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
+                Text(
+                    text = "A submission checklist for the chosen platforms is created automatically.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textTertiary,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
             }
         }
 
         item {
-            Button(
+            PrimaryButton(
+                text = "Create release",
                 onClick = {
                     submitted = true
                     if (canSubmit) {
@@ -162,10 +163,10 @@ fun NewReleaseScreen(
                         if (id != null) onCreated(id)
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Create release")
-            }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+            )
         }
     }
 }
@@ -179,17 +180,17 @@ private fun PlatformRow(
     onBuildChange: (String) -> Unit,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(checked = enabled, onCheckedChange = onEnabledChange)
+        AppCheckbox(checked = enabled, onCheckedChange = onEnabledChange)
         PlatformChip(platform = platform)
         Spacer(modifier = Modifier.width(12.dp))
-        OutlinedTextField(
+        AppTextField(
             value = build,
             onValueChange = onBuildChange,
-            label = { Text("${platform.label} build number") },
-            placeholder = { Text("auto") },
-            singleLine = true,
+            label = "Build number",
+            placeholder = "auto",
             enabled = enabled,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = MonoText.large,
             modifier = Modifier.weight(1f),
         )
     }

@@ -9,8 +9,8 @@ import kz.kbtu.releaseflow.ui.theme.ReleaseFlowTheme
 
 /**
  * The single Activity of the app. On rotation Android destroys and recreates it
- * (there is no `configChanges` override on purpose) — that is what the
- * "Rotation demo" card on the Orders tab demonstrates.
+ * (there is no `configChanges` override on purpose): the ViewModel, the Navigation back stack
+ * and `rememberSaveable` state are what keep the screens consistent across that.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
