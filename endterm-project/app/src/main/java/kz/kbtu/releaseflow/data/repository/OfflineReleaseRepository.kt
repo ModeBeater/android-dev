@@ -62,15 +62,24 @@ class OfflineReleaseRepository(
     override suspend fun addApp(name: String, bundleId: String, packageName: String, githubRepo: String?): Int {
         require(name.isNotBlank()) { "App name is required" }
         require(!dao.appNameExists(name.trim())) { "An app with this name already exists" }
-        val repo = githubRepo?.trim()?.removePrefix("https://github.com/")?.trim('/')?.takeIf { it.isNotBlank() }
-        require(repo == null || repo.matches(Regex("""[\w.-]+/[\w.-]+"""))) { "GitHub repository must look like owner/name" }
-        return dao.insertApp(AppEntity(name = name.trim(), bundleId = bundleId.trim(), packageName = packageName.trim(), githubRepo = repo)).toInt()
+        val entity = AppEntity(name = name.trim(), bundleId = bundleId.trim(), packageName = packageName.trim(), githubRepo = cleanRepo(githubRepo))
+        return dao.insertApp(entity).toInt()
     }
 
-    override suspend fun updateGithubRepo(appId: Int, repo: String?) {
+    override suspend fun updateApp(appId: Int, name: String, bundleId: String, packageName: String, githubRepo: String?) {
+        val current = requireNotNull(dao.app(appId)) { "Unknown app" }
+        require(name.isNotBlank()) { "App name is required" }
+        require(!dao.appNameExists(name.trim(), excludeId = appId)) { "An app with this name already exists" }
+        dao.updateApp(current.copy(name = name.trim(), bundleId = bundleId.trim(), packageName = packageName.trim(), githubRepo = cleanRepo(githubRepo)))
+    }
+
+    override suspend fun updateGithubRepo(appId: Int, repo: String?) = dao.updateGithubRepo(appId, cleanRepo(repo))
+
+    /** "https://github.com/owner/name/" -> "owner/name"; blank -> null; anything else is rejected. */
+    private fun cleanRepo(repo: String?): String? {
         val clean = repo?.trim()?.removePrefix("https://github.com/")?.trim('/')?.takeIf { it.isNotBlank() }
         require(clean == null || clean.matches(Regex("""[\w.-]+/[\w.-]+"""))) { "GitHub repository must look like owner/name" }
-        dao.updateGithubRepo(appId, clean)
+        return clean
     }
 
     override suspend fun deleteApp(appId: Int) {
@@ -89,7 +98,14 @@ class OfflineReleaseRepository(
         return dao.insertReleaseGraph(release)
     }
 
-    override suspend fun updateNotes(releaseId: Int, notes: String) = dao.updateNotes(releaseId, notes)
+    override suspend fun updateRelease(releaseId: Int, version: String, plannedAt: Long?, notes: String) {
+        val current = requireNotNull(dao.release(releaseId)) { "Unknown release" }
+        require(version.trim().matches(Regex("""\d+\.\d+(\.\d+)?"""))) { "Version must look like 1.2 or 1.2.3" }
+        require(!dao.versionExists(current.release.appId, version.trim(), excludeId = releaseId)) { "Version $version already exists for this app" }
+        dao.updateRelease(releaseId, version.trim(), plannedAt, notes.trim())
+    }
+
+    override suspend fun deleteRelease(releaseId: Int) = dao.deleteRelease(releaseId)
 
     override suspend fun toggleChecklistItem(releaseId: Int, itemId: Int) {
         val changed = dao.toggleChecklistItem(itemId)

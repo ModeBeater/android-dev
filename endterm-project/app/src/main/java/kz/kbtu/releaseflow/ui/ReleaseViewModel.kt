@@ -52,7 +52,11 @@ class ReleaseViewModel(
         navigateTo(Routes.release(id), popUpTo = Routes.NEW_RELEASE)
     }
 
-    fun updateNotes(releaseId: Int, notes: String) = command { repository.updateNotes(releaseId, notes) }
+    /** Deletes the release with its tracks, history and checklist (the screen has already navigated away). */
+    fun deleteRelease(releaseId: Int) = command {
+        repository.deleteRelease(releaseId)
+        showMessage("Release deleted")
+    }
 
     fun toggleChecklistItem(releaseId: Int, itemId: Int) = command { repository.toggleChecklistItem(releaseId, itemId) }
 

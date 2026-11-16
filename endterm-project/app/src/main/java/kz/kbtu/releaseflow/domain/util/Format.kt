@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
@@ -15,6 +16,16 @@ private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:m
 fun Long.toLocalDate(): LocalDate = Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 
 fun LocalDate.toEpochMillis(): Long = atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+/** "2026-11-21" -> LocalDate, or null when the text is not an ISO date (forms validate with this). */
+fun parseIsoDate(text: String): LocalDate? = try {
+    LocalDate.parse(text.trim())
+} catch (e: DateTimeParseException) {
+    null
+}
+
+/** Epoch millis -> "2026-11-21" for pre-filling a date field. */
+fun Long.isoDateText(): String = toLocalDate().toString()
 
 /** "12 Oct" */
 fun Long.dayText(): String = dayFormatter.format(toLocalDate())

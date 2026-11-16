@@ -9,6 +9,8 @@ import kz.kbtu.releaseflow.ReleaseFlowApplication
 import kz.kbtu.releaseflow.ui.screens.AddAppViewModel
 import kz.kbtu.releaseflow.ui.screens.AppDetailsViewModel
 import kz.kbtu.releaseflow.ui.screens.BuildLogViewModel
+import kz.kbtu.releaseflow.ui.screens.EditAppViewModel
+import kz.kbtu.releaseflow.ui.screens.EditReleaseViewModel
 import kz.kbtu.releaseflow.ui.screens.GitHubReleasesViewModel
 import kz.kbtu.releaseflow.ui.screens.SettingsViewModel
 
@@ -35,6 +37,12 @@ object AppViewModelProvider {
         }
         initializer {
             GitHubReleasesViewModel(this.createSavedStateHandle(), container().releaseRepository, container().storeRepository)
+        }
+        initializer {
+            EditAppViewModel(this.createSavedStateHandle(), container().releaseRepository)
+        }
+        initializer {
+            EditReleaseViewModel(this.createSavedStateHandle(), container().releaseRepository)
         }
         initializer {
             BuildLogViewModel(this.createSavedStateHandle(), container().releaseRepository, container().buildLogSocket)

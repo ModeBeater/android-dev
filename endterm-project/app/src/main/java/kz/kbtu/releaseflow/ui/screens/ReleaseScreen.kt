@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -41,6 +42,7 @@ import kz.kbtu.releaseflow.domain.util.relativeDays
 import kz.kbtu.releaseflow.ui.ReleaseUiState
 import kz.kbtu.releaseflow.ui.TrackUi
 import kz.kbtu.releaseflow.ui.components.ChecklistProgress
+import kz.kbtu.releaseflow.ui.components.ConfirmDialog
 import kz.kbtu.releaseflow.ui.components.DangerButton
 import kz.kbtu.releaseflow.ui.components.EmptyState
 import kz.kbtu.releaseflow.ui.components.FlatCard
@@ -73,6 +75,8 @@ fun ReleaseScreen(
     onAction: (Platform, TrackAction, Int?) -> Unit,
     onOpenChecklist: () -> Unit,
     onOpenLog: (Platform) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
     onOpenApp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -85,6 +89,7 @@ fun ReleaseScreen(
 
     // Which platform's rollout dialog is open ("" = none) — survives rotation.
     var rolloutFor by rememberSaveable { mutableStateOf("") }
+    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -98,6 +103,7 @@ fun ReleaseScreen(
                         Text(text = release.appName, style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
                         Text(text = "Version ${release.version}", style = MaterialTheme.typography.titleLarge, color = colors.textPrimary)
                     }
+                    LinkButton(text = "Edit", onClick = onEdit)
                     LinkButton(text = "App", onClick = onOpenApp, trailingIcon = Icons.Default.KeyboardArrowRight)
                 }
                 if (release.notes.isNotBlank()) {
@@ -126,8 +132,7 @@ fun ReleaseScreen(
             }
         }
 
-        items(release.tracks.size) { index ->
-            val track = release.tracks[index]
+        items(release.tracks, key = { it.platform.name }) { track ->
             TrackCard(
                 track = track,
                 isProcessing = state.isProcessing(track),
@@ -152,6 +157,32 @@ fun ReleaseScreen(
                 }
             }
         }
+
+        item {
+            SectionHeader(title = "Danger zone")
+            FlatCard {
+                Text(
+                    text = "Deleting the release removes its tracks, stage history and checklist from the database.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textTertiary,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                DangerButton(text = "Delete release", onClick = { showDeleteDialog = true }, modifier = Modifier.fillMaxWidth())
+            }
+        }
+    }
+
+    if (showDeleteDialog) {
+        ConfirmDialog(
+            title = "Delete ${release.appName} ${release.version}?",
+            text = "The release, its ${release.tracks.size} platform track(s), the stage history and the checklist will be removed. There is no undo.",
+            confirmLabel = "Delete",
+            onConfirm = {
+                showDeleteDialog = false
+                onDelete()
+            },
+            onDismiss = { showDeleteDialog = false },
+        )
     }
 
     val rolloutTrack = release.tracks.firstOrNull { it.platform.name == rolloutFor }

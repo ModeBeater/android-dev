@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kz.kbtu.releaseflow.domain.model.Platform
+import kz.kbtu.releaseflow.domain.util.parseIsoDate
 import kz.kbtu.releaseflow.domain.util.toEpochMillis
 import kz.kbtu.releaseflow.ui.ReleaseUiState
 import kz.kbtu.releaseflow.ui.components.AppCheckbox
@@ -35,8 +36,6 @@ import kz.kbtu.releaseflow.ui.components.PlatformChip
 import kz.kbtu.releaseflow.ui.components.PrimaryButton
 import kz.kbtu.releaseflow.ui.theme.MonoText
 import kz.kbtu.releaseflow.ui.theme.ReleaseFlowTheme
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
 
 /**
  * Form for a new release. Everything typed here is local `rememberSaveable` state (it is a
@@ -69,7 +68,7 @@ fun NewReleaseScreen(
     var submitted by rememberSaveable { mutableStateOf(false) }
 
     val versionError = if (!version.matches(Regex("""\d+\.\d+(\.\d+)?"""))) "Use 1.2 or 1.2.3" else null
-    val dateError = if (plannedDate.isNotBlank() && parseDate(plannedDate) == null) "Use YYYY-MM-DD" else null
+    val dateError = if (plannedDate.isNotBlank() && parseIsoDate(plannedDate) == null) "Use YYYY-MM-DD" else null
     val platformsError = if (!iosEnabled && !androidEnabled) "Choose at least one platform" else null
     val canSubmit = versionError == null && dateError == null && platformsError == null
 
@@ -158,7 +157,7 @@ fun NewReleaseScreen(
                             if (iosEnabled) put(Platform.IOS, iosBuild.ifBlank { version.replace(".", "") })
                             if (androidEnabled) put(Platform.ANDROID, androidBuild.ifBlank { version.replace(".", "") + "0" })
                         }
-                        val planned = plannedDate.takeIf { it.isNotBlank() }?.let { parseDate(it)?.toEpochMillis() }
+                        val planned = plannedDate.takeIf { it.isNotBlank() }?.let { parseIsoDate(it)?.toEpochMillis() }
                         onCreate(version.trim(), builds, planned, notes)
                     }
                 },
@@ -201,10 +200,4 @@ private fun bumpMinor(version: String): String {
     if (parts.size < 2) return version
     val bumped = parts.toMutableList().apply { this[1] = this[1] + 1; for (i in 2 until size) this[i] = 0 }
     return bumped.joinToString(".")
-}
-
-private fun parseDate(text: String): LocalDate? = try {
-    LocalDate.parse(text.trim())
-} catch (e: DateTimeParseException) {
-    null
 }

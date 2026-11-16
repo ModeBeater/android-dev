@@ -37,6 +37,8 @@ import kz.kbtu.releaseflow.ui.screens.AppsScreen
 import kz.kbtu.releaseflow.ui.screens.BuildLogScreen
 import kz.kbtu.releaseflow.ui.screens.ChecklistScreen
 import kz.kbtu.releaseflow.ui.screens.DashboardScreen
+import kz.kbtu.releaseflow.ui.screens.EditAppScreen
+import kz.kbtu.releaseflow.ui.screens.EditReleaseScreen
 import kz.kbtu.releaseflow.ui.screens.GitHubReleasesScreen
 import kz.kbtu.releaseflow.ui.screens.NewReleaseScreen
 import kz.kbtu.releaseflow.ui.screens.ReleaseScreen
@@ -97,7 +99,9 @@ fun ReleaseFlowApp(viewModel: ReleaseViewModel = viewModel(factory = AppViewMode
         Routes.SETTINGS -> "Settings"
         Routes.ADD_APP -> "New app"
         Routes.APP -> appArg?.name ?: "App"
+        Routes.EDIT_APP -> "Edit app"
         Routes.NEW_RELEASE -> "New release"
+        Routes.EDIT_RELEASE -> "Edit release"
         Routes.GITHUB -> "GitHub releases"
         Routes.RELEASE -> releaseArg?.version ?: "Release"
         Routes.CHECKLIST -> "Checklist"
@@ -108,7 +112,9 @@ fun ReleaseFlowApp(viewModel: ReleaseViewModel = viewModel(factory = AppViewMode
     val subtitle: String? = when (currentRoute) {
         Routes.ADD_APP -> "Apps"
         Routes.APP -> "Apps"
+        Routes.EDIT_APP -> appArg?.name ?: "App"
         Routes.NEW_RELEASE -> appArg?.name ?: "App"
+        Routes.EDIT_RELEASE -> releaseArg?.let { "${it.appName} ${it.version}" } ?: "Release"
         Routes.GITHUB -> appArg?.githubRepo ?: appArg?.name ?: "App"
         Routes.RELEASE -> releaseArg?.appName ?: "Release"
         Routes.CHECKLIST -> releaseArg?.let { "${it.appName} ${it.version}" } ?: "Release"
@@ -199,12 +205,27 @@ fun ReleaseFlowApp(viewModel: ReleaseViewModel = viewModel(factory = AppViewMode
                         appId = appId,
                         onOpenRelease = { id -> navController.navigate(Routes.release(id)) },
                         onNewRelease = { navController.navigate(Routes.newRelease(appId)) },
+                        onEdit = { navController.navigate(Routes.editApp(appId)) },
                         onOpenGithub = { navController.navigate(Routes.github(appId)) },
                         onDeleted = {
                             // Back to the list when it is on the stack (Apps tab), otherwise just back.
                             if (!navController.popBackStack(Routes.APPS, inclusive = false)) navController.popBackStack()
                         },
                     )
+                }
+
+                composable(
+                    route = Routes.EDIT_APP,
+                    arguments = listOf(navArgument(Routes.APP_ID_ARG) { type = NavType.IntType }),
+                ) {
+                    EditAppScreen(onSaved = { navController.popBackStack() })
+                }
+
+                composable(
+                    route = Routes.EDIT_RELEASE,
+                    arguments = listOf(navArgument(Routes.RELEASE_ID_ARG) { type = NavType.IntType }),
+                ) {
+                    EditReleaseScreen(onSaved = { navController.popBackStack() })
                 }
 
                 composable(
@@ -242,6 +263,12 @@ fun ReleaseFlowApp(viewModel: ReleaseViewModel = viewModel(factory = AppViewMode
                         onAction = { platform, action, percent -> viewModel.runAction(releaseId, platform, action, percent) },
                         onOpenChecklist = { navController.navigate(Routes.checklist(releaseId)) },
                         onOpenLog = { platform -> navController.navigate(Routes.buildLog(releaseId, platform)) },
+                        onEdit = { navController.navigate(Routes.editRelease(releaseId)) },
+                        onDelete = {
+                            // Leave the screen first, then delete; the lists behind it update through the Flow.
+                            navController.popBackStack()
+                            viewModel.deleteRelease(releaseId)
+                        },
                         onOpenApp = {
                             state.release(releaseId)?.let { navController.navigate(Routes.app(it.appId)) }
                         },

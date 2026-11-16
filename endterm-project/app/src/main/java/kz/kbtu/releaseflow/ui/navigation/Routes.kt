@@ -24,6 +24,9 @@ object Routes {
     const val APP = "app/{$APP_ID_ARG}"
     fun app(appId: Int) = "app/$appId"
 
+    const val EDIT_APP = "app/{$APP_ID_ARG}/edit"
+    fun editApp(appId: Int) = "app/$appId/edit"
+
     const val NEW_RELEASE = "app/{$APP_ID_ARG}/new"
     fun newRelease(appId: Int) = "app/$appId/new"
 
@@ -33,6 +36,9 @@ object Routes {
     const val RELEASE_ID_ARG = "releaseId"
     const val RELEASE = "release/{$RELEASE_ID_ARG}"
     fun release(releaseId: Int) = "release/$releaseId"
+
+    const val EDIT_RELEASE = "release/{$RELEASE_ID_ARG}/edit"
+    fun editRelease(releaseId: Int) = "release/$releaseId/edit"
 
     const val CHECKLIST = "release/{$RELEASE_ID_ARG}/checklist"
     fun checklist(releaseId: Int) = "release/$releaseId/checklist"

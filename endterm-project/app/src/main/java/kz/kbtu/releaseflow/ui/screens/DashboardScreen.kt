@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -117,8 +118,7 @@ fun DashboardScreen(
                 }
             }
         }
-        items(upcoming.take(3).size) { index ->
-            val release = upcoming[index]
+        items(upcoming.take(3), key = { "upcoming-${it.id}" }) { release ->
             ReleaseCard(release = release, onClick = { onOpenRelease(release.id) })
         }
 

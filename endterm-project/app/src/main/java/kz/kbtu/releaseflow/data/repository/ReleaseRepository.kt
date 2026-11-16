@@ -34,13 +34,15 @@ interface ReleaseRepository {
 
     // ---- apps (CRUD) ------------------------------------------------------------
     suspend fun addApp(name: String, bundleId: String, packageName: String, githubRepo: String?): Int
+    suspend fun updateApp(appId: Int, name: String, bundleId: String, packageName: String, githubRepo: String?)
     suspend fun updateGithubRepo(appId: Int, repo: String?)
     suspend fun deleteApp(appId: Int)
     suspend fun saveListing(listing: StoreListing)
 
-    // ---- releases ---------------------------------------------------------------
+    // ---- releases (CRUD) ----------------------------------------------------------
     suspend fun createRelease(appId: Int, version: String, builds: Map<Platform, String>, plannedAt: Long?, notes: String): Int
-    suspend fun updateNotes(releaseId: Int, notes: String)
+    suspend fun updateRelease(releaseId: Int, version: String, plannedAt: Long?, notes: String)
+    suspend fun deleteRelease(releaseId: Int)
     suspend fun toggleChecklistItem(releaseId: Int, itemId: Int)
     suspend fun addChecklistItem(releaseId: Int, title: String, platform: Platform?)
 

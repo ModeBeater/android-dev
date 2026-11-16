@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import kz.kbtu.releaseflow.domain.model.Release
@@ -47,11 +48,12 @@ abstract class ReleaseDao {
     @Query("SELECT COUNT(*) FROM apps")
     abstract suspend fun appCount(): Int
 
-    @Query("SELECT EXISTS(SELECT 1 FROM apps WHERE name = :name COLLATE NOCASE)")
-    abstract suspend fun appNameExists(name: String): Boolean
+    /** `excludeId` lets an edit form keep its own current name. */
+    @Query("SELECT EXISTS(SELECT 1 FROM apps WHERE name = :name COLLATE NOCASE AND id != :excludeId)")
+    abstract suspend fun appNameExists(name: String, excludeId: Int = 0): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM releases WHERE appId = :appId AND version = :version)")
-    abstract suspend fun versionExists(appId: Int, version: String): Boolean
+    @Query("SELECT EXISTS(SELECT 1 FROM releases WHERE appId = :appId AND version = :version AND id != :excludeId)")
+    abstract suspend fun versionExists(appId: Int, version: String, excludeId: Int = 0): Boolean
 
     @Query("SELECT * FROM store_listings WHERE appId = :appId")
     abstract suspend fun listing(appId: Int): StoreListingEntity?
@@ -101,8 +103,11 @@ abstract class ReleaseDao {
 
     // ---- update --------------------------------------------------------------------
 
-    @Query("UPDATE releases SET notes = :notes WHERE id = :releaseId")
-    abstract suspend fun updateNotes(releaseId: Int, notes: String)
+    @Update
+    abstract suspend fun updateApp(app: AppEntity)
+
+    @Query("UPDATE releases SET version = :version, plannedAt = :plannedAt, notes = :notes WHERE id = :releaseId")
+    abstract suspend fun updateRelease(releaseId: Int, version: String, plannedAt: Long?, notes: String)
 
     @Query("UPDATE checklist_items SET done = NOT done WHERE id = :itemId")
     abstract suspend fun toggleChecklistItem(itemId: Int): Int
@@ -115,6 +120,10 @@ abstract class ReleaseDao {
     /** Cascades to releases, tracks, events, checklist items and the store listing. */
     @Delete
     abstract suspend fun deleteApp(app: AppEntity)
+
+    /** Cascades to the release's tracks, events and checklist items. */
+    @Query("DELETE FROM releases WHERE id = :releaseId")
+    abstract suspend fun deleteRelease(releaseId: Int)
 
     @Query("DELETE FROM apps")
     abstract suspend fun deleteAllApps()

@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -142,7 +142,7 @@ fun BuildLogScreen(
                     )
                 }
             }
-            items(ui.lines) { line ->
+            itemsIndexed(ui.lines, key = { index, _ -> index }) { _, line ->
                 Row {
                     Text(text = line.at.timeText(), style = MonoText.small, color = colors.textTertiary)
                     Spacer(modifier = Modifier.width(10.dp))

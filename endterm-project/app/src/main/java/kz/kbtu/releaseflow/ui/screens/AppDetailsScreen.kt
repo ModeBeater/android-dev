@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +43,7 @@ import kz.kbtu.releaseflow.ui.components.EmptyState
 import kz.kbtu.releaseflow.ui.components.FlatCard
 import kz.kbtu.releaseflow.ui.components.Hairline
 import kz.kbtu.releaseflow.ui.components.KeyValueRow
+import kz.kbtu.releaseflow.ui.components.LinkButton
 import kz.kbtu.releaseflow.ui.components.PageListPadding
 import kz.kbtu.releaseflow.ui.components.ReleaseCard
 import kz.kbtu.releaseflow.ui.components.SectionHeader
@@ -62,6 +64,7 @@ fun AppDetailsScreen(
     appId: Int,
     onOpenRelease: (Int) -> Unit,
     onNewRelease: () -> Unit,
+    onEdit: () -> Unit,
     onOpenGithub: () -> Unit,
     onDeleted: () -> Unit,
     modifier: Modifier = Modifier,
@@ -112,6 +115,7 @@ fun AppDetailsScreen(
                                 color = colors.textSecondary,
                             )
                         }
+                        LinkButton(text = "Edit", onClick = onEdit, trailingIcon = Icons.Default.KeyboardArrowRight)
                     }
                     local.message?.let { message ->
                         Spacer(modifier = Modifier.height(10.dp))
