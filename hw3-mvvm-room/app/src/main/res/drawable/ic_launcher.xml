@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon: black rounded square, a purple "release" arrow and a quiet base line — the app's own palette. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF1A1A1A"
+        android:pathData="M22,0 H86 A22,22 0 0 1 108,22 V86 A22,22 0 0 1 86,108 H22 A22,22 0 0 1 0,86 V22 A22,22 0 0 1 22,0 Z" />
+    <path
+        android:fillColor="#FF8C52FF"
+        android:pathData="M54,22 L78,50 H64 V74 H44 V50 H30 Z" />
+    <path
+        android:fillColor="#FF5C6066"
+        android:pathData="M30,82 H78 V88 H30 Z" />
+</vector>

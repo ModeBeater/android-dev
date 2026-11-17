@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose draws everything itself; the platform theme only hides the legacy action bar and
+         paints the window in the page colour so there is no flash before the first frame. -->
+    <style name="Theme.ReleaseFlow" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#F7F7F7</item>
+    </style>
+</resources>

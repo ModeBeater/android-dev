@@ -1,9 +1,9 @@
-# ReleaseFlow — Endterm Project (Part 2) · HW3 · HW4
+# ReleaseFlow — Endterm Project (Part 2) · HW4
 
 Mobile Programming (KBTU, Fall 2026) · Android application with Kotlin, Jetpack Compose, Room, Retrofit,
-WorkManager and DataStore. Continues the midterm project in [`../midterm-project`](../midterm-project);
-the same codebase is submitted for **Homework 3** (MVVM and local data storage — see the
-[checklist below](#homework-3--mvvm-and-local-data-storage)) and **Homework 4** (networking and background processing).
+WorkManager and DataStore. Continues the midterm project in [`../midterm-project`](../midterm-project)
+and the Room edition submitted as Homework 3 in [`../hw3-mvvm-room`](../hw3-mvvm-room); the same codebase
+is submitted for **Homework 4** (networking and background processing).
 
 **ReleaseFlow** is a release tracker for mobile teams: where each app version is on each platform (CI →
 TestFlight / Internal testing → store review → staged rollout → live), what the reviewer rejected and why,
@@ -139,33 +139,12 @@ everything is still there (Room). Then **Apps → New app**, type `ph.telegra.Te
   Navigation after a "create" is a one-shot `NavigationEvent` in the state, emitted once Room has
   delivered the new row.
 
-## Homework 3 — MVVM and local data storage
-
-| Requirement | Where it is in the code |
-| --- | --- |
-| Collection of custom objects in `LazyColumn` with stable keys | `AppsScreen` (`items(state.apps, key = { it.id })`), `AppDetailsScreen` (releases by id), `ReleaseScreen` (tracks by platform), `DashboardScreen` (upcoming), `GitHubReleasesScreen` (releases by GitHub id), `BuildLogScreen` (`itemsIndexed` with keys) |
-| List and detail screens with Navigation Compose | Apps → `app/{appId}` → `release/{releaseId}` → `release/{releaseId}/checklist`; typed `Int` arguments, back stack restored across rotation (`ui/ReleaseFlowApp.kt`, `ui/navigation/Routes.kt`) |
-| Forms for creating **and editing** items with validation | create: `AddAppScreen`, `NewReleaseScreen`, checklist item dialog; edit: `EditAppScreen` (name ≥ 2 chars and unique, bundle-id / package / `owner/name` formats), `EditReleaseScreen` (version `1.2(.3)` unique within the app, ISO date). Inline errors while typing, database-level checks reported under the button |
-| Delete with a confirmation dialog | `AppDetailsScreen` → *Delete app* and `ReleaseScreen` → *Delete release*, both through `ConfirmDialog`; the rows cascade (`ON DELETE CASCADE`) |
-| Additional feature: multi-step workflow with status transitions and conditions | the release workflow: `Draft → Building → Testing → Submitted → In review → Approved / Rejected → Rolling out (staged %) → Live`, with `Halted`/`Resume` for a paused rollout. `allowedActions(platform, stage)` decides which buttons exist (iOS has no staged rollout, Android does); the simulated reviewer rejects when a guideline-bound checklist item is unchecked; every transition is an appended `stage_events` row, so the history, the statistics (review durations, approval rate, rejections per guideline) and the dashboard's attention list are all derived from persisted data |
-| Empty states and feedback | `EmptyState` for empty lists and unknown ids, snackbar after every command (`UiMessage`), inline pills for lookup results, progress indicators for CI/store checks and network calls |
-| `ViewModel` + `StateFlow`, collected with `collectAsStateWithLifecycle()` | `ReleaseViewModel.uiState` (shared), `AddAppViewModel`, `AppDetailsViewModel`, `EditAppViewModel`, `EditReleaseViewModel`, `GitHubReleasesViewModel`, `BuildLogViewModel`, `SettingsViewModel` |
-| UI / ViewModel / Repository / data source separated | `ui/screens` + `ui/components` → `ui/*ViewModel` → `data/repository` (interfaces) → `data/local` (Room) / `data/remote` (Retrofit) |
-| State hoisting, reusable composables | every component in `ui/components` takes value + callback; forms are state in the ViewModel or `rememberSaveable` drafts |
-| User actions go through ViewModel methods | screens receive callbacks only (`onCreate`, `onAction`, `onToggle`, `onDelete`…); no composable touches the repository |
-| Room: `Entity`, `DAO`, database | `data/local/Entities.kt` (6 entities, foreign keys, unique indices), `ReleaseDao.kt`, `ReleaseDatabase.kt` |
-| Complete CRUD, all wired to the UI | **C** `insertApp` (Add app), `insertReleaseGraph` (New release / Track from GitHub), `insertChecklistItem`; **R** `observeApps` / `observeReleases` / `observeListings` Flows, `release(id)`, `app(id)`; **U** `updateApp` (Edit app), `updateRelease` (Edit release), `toggleChecklistItem` (checkbox), `updateGithubRepo` (Link), `upsertListing` (Refresh / sync); **D** `deleteApp`, `deleteRelease`, `deleteAllApps` (Reset demo data) — no DAO method is unused |
-| Repository over the database | `ReleaseRepository` interface + `OfflineReleaseRepository` (Room); `StoreRepository` for the APIs |
-| Room `Flow` → automatic UI updates | `OfflineReleaseRepository.data` = `combine(observeApps, observeReleases, observeListings)` → `ReleaseViewModel` → every screen; a write on one screen (or in the background worker) is visible on all others without a refresh |
-| Data persists across restarts | everything lives in `releaseflow.db` (and settings in DataStore); the demo data is seeded once (`seedIfEmpty`) |
-| Consistency across navigation and configuration changes | ViewModels scoped to the Activity / back-stack entry, `SavedStateHandle` for route arguments, `rememberSaveable` for drafts and open dialogs |
-
 ## Homework 4 and endterm — where the requirements are demonstrated
 
 | Requirement | Where |
 | --- | --- |
 | Room: entities, DAO, database, relations | `data/local/Entities.kt`, `ReleaseDao.kt`, `ReleaseDatabase.kt` |
-| CRUD | see the Homework 3 table above — create / read / update / delete for apps, releases and checklist items, all reachable from the UI |
+| CRUD | **C** `insertApp`, `insertReleaseGraph`, `insertChecklistItem`; **R** `observe*` Flows, `app(id)`, `release(id)`; **U** `updateApp` (Edit app), `updateRelease` (Edit release), `toggleChecklistItem`, `updateGithubRepo`, `upsertListing`; **D** `deleteApp`, `deleteRelease`, `deleteAllApps` (Reset demo data) — all reachable from the UI |
 | Room `Flow` → ViewModel → Compose | `OfflineReleaseRepository.data` = `combine(observeApps, observeReleases, observeListings)` → `ReleaseViewModel.uiState` → `collectAsStateWithLifecycle()` |
 | Repository pattern, MVVM | `data/repository/*` interfaces + implementations; ViewModels never see Room or Retrofit types |
 | Retrofit + data classes + coroutines | `data/remote/ItunesApi.kt`, `GitHubApi.kt` (`suspend` endpoints, `@Serializable` DTOs), `Network.kt` |
