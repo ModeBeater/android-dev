@@ -50,23 +50,31 @@ Four top-level destinations in the floating tab bar; the detail routes carry typ
 
 ## Screenshots
 
-**Additional feature — the release workflow** (status transitions with conditions, decided by the domain
-and persisted in Room: a rejected iOS review, the checklist that caused it, the resubmission approved,
-the staged Android rollout):
+The additional feature is the **release workflow** — status transitions with conditions, decided by the
+domain and persisted in Room. Every badge, button and number below is derived from the stored stage history:
 
-| Rejected by the store | Checklist decides the review | Approved after resubmission | Staged rollout → live |
+| Submission checklist decides the review | Staged rollout — a conditional transition | Overview — attention list driven by the workflow |
+| --- | --- | --- |
+| ![Checklist](screenshots/workflow-checklist.png) | ![Rollout](screenshots/workflow-rollout.png) | ![Overview](screenshots/dashboard.png) |
+
+*Checklist (Dala Market 1.3.0):* items marked "Reviewer checks" are bound to store guidelines; while one of
+them is unchecked, "Check review status" ends in `Rejected` citing that guideline. Ticking a box is a Room
+update (`toggleChecklistItem`) and the progress bar, the release card and the overview recompute from the
+Flow. *Rollout (Nomad Pay 3.5.0, Android):* `Rolling out 20 %` can only move up, in steps the slider
+constrains, and only on Google Play — iOS has no staged rollout, so its track never shows this action.
+*Overview:* a rejected iOS review and a review waiting for two days surface as "Needs attention"; the
+Signal row comes from the App Store lookup (the store has 8.37, newer than the tracked 7.52.0).
+
+| Apps — per-platform stage of every release | Statistics — review times, approval rate, rejections | Settings — WorkManager status, DataStore preferences | Build log — WebSocket stream |
 | --- | --- | --- | --- |
-| ![Rejected](screenshots/workflow-rejected.png) | ![Checklist](screenshots/workflow-checklist.png) | ![Approved](screenshots/workflow-approved.png) | ![Rollout](screenshots/workflow-rollout.png) |
+| ![Apps](screenshots/apps.png) | ![Statistics](screenshots/stats.png) | ![Settings](screenshots/settings.png) | ![Build log](screenshots/log.png) |
 
-**Other screens:**
-
-| Overview | App with store listing | GitHub releases |
-| --- | --- | --- |
-| ![Overview](screenshots/dashboard.png) | ![App](screenshots/app.png) | ![GitHub](screenshots/github.png) |
-
-| Edit release | Build log (WebSocket) | Settings (WorkManager) |
-| --- | --- | --- |
-| ![Edit](screenshots/edit-release.png) | ![Log](screenshots/log.png) | ![Settings](screenshots/settings.png) |
+*Apps:* `In review`, `Rolling out 20 %`, `Building`, `Draft`, `Live` are the current stages of each
+platform track, i.e. the last row of its `stage_events`. *Statistics:* average review per store, 80 %
+approval over 10 review cycles and the rejection log by guideline, computed from the same rows.
+*Settings:* the periodic store-sync request is enqueued with its next run time; the last manual sync
+checked 4 apps (3 are not on the App Store — the demo apps); interval and storefront are DataStore
+preferences. *Build log:* the pipeline steps streamed back over an OkHttp WebSocket.
 
 ## How to run
 
